@@ -14,7 +14,7 @@
 #import "SPUDownloadDataPrivate.h"
 #import "SUErrors.h"
 #import "SULocalizations.h"
-
+#import "ELog.h"
 
 #include "AppKitPrevention.h"
 
@@ -64,6 +64,8 @@ static NSString *SUDownloadingReason = @"Downloading update related file";
 
 - (void)startDownloadWithRequest:(SPUURLRequest *)request
 {
+    ELogURL(@"startDownloadWithRequest", request.request.URL);
+    
     self.downloadSession = [NSURLSession
         sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]
         delegate:self
@@ -76,6 +78,8 @@ static NSString *SUDownloadingReason = @"Downloading update related file";
 
 - (void)startPersistentDownloadWithRequest:(SPUURLRequest *)request bundleIdentifier:(NSString *)bundleIdentifier desiredFilename:(NSString *)desiredFilename
 {
+    ELogURL(@"startPersistentDownloadWithRequest", request.request.URL);
+
     dispatch_async(dispatch_get_main_queue(), ^{
         if (self.download == nil && self.delegate != nil) {
             // Prevent service from automatically terminating while downloading the update asynchronously without any reply blocks
@@ -93,6 +97,8 @@ static NSString *SUDownloadingReason = @"Downloading update related file";
 
 - (void)startTemporaryDownloadWithRequest:(SPUURLRequest *)request
 {
+    ELogURL(@"startTemporaryDownloadWithRequest", request.request.URL);
+
     dispatch_async(dispatch_get_main_queue(), ^{
         if (self.download == nil && self.delegate != nil) {
             // Prevent service from automatically terminating while downloading the update asynchronously without any reply blocks
@@ -115,7 +121,10 @@ static NSString *SUDownloadingReason = @"Downloading update related file";
 
 - (NSString *)rootPersistentDownloadCachePathForBundleIdentifier:(NSString *)bundleIdentifier
 {
-    return [[SPULocalCacheDirectory cachePathForBundleIdentifier:bundleIdentifier] stringByAppendingPathComponent:@"PersistentDownloads"];
+    NSString *temp = [[SPULocalCacheDirectory cachePathForBundleIdentifier:bundleIdentifier] stringByAppendingPathComponent:@"PersistentDownloads"];
+    ELogString(@"rootPersistentDownloadCachePathForBundleIdentifier", temp);
+
+   return [[SPULocalCacheDirectory cachePathForBundleIdentifier:bundleIdentifier] stringByAppendingPathComponent:@"PersistentDownloads"];
 }
 
 - (void)removeDownloadDirectory:(NSString *)directoryName bundleIdentifier:(NSString *)bundleIdentifier
@@ -162,12 +171,15 @@ static NSString *SUDownloadingReason = @"Downloading update related file";
 
 - (void)URLSession:(NSURLSession *)__unused session downloadTask:(NSURLSessionDownloadTask *) downloadTask didFinishDownloadingToURL:(NSURL *)location
 {
+    ELogURL( @"didFinishDownloadingToURL", location );
+     
     int statusCode = (int)((NSHTTPURLResponse*)downloadTask.response).statusCode;
     if ((statusCode < 200) || (statusCode >= 400))
     {
         NSString *message = [NSString stringWithFormat:SULocalizedString(@"A network error occurred while downloading the update. %@ %d", @""), [NSHTTPURLResponse localizedStringForStatusCode:statusCode], statusCode]; 
         NSError *error = [NSError errorWithDomain:SUSparkleErrorDomain code:SUDownloadError userInfo:@{ NSLocalizedDescriptionKey: message }];
         [self.delegate downloaderDidFailWithError:error];
+        ELogString( @"didFinishDownloadingToURL:error", message );
     }
     else if (self.mode == SPUDownloadModeTemporary)
     {
@@ -236,6 +248,7 @@ static NSString *SUDownloadingReason = @"Downloading update related file";
 - (void)downloadDidFinish
 {
     assert(self.downloadFilename != nil);
+    ELogString(@"downloadDidFinish", @"");
     
     SPUDownloadData *downloadData = nil;
     if (self.mode == SPUDownloadModeTemporary) {
@@ -277,6 +290,8 @@ static NSString *SUDownloadingReason = @"Downloading update related file";
 
 - (void)URLSession:(NSURLSession *)__unused session task:(NSURLSessionTask *)__unused task didCompleteWithError:(NSError *)error
 {
+    ELogError(@"didCompleteWithError", error);
+
     self.download = nil;
     if (error != nil) {
         [self.delegate downloaderDidFailWithError:error];
