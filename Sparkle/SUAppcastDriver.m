@@ -59,6 +59,14 @@ void ELog(NSDictionary *dict) {
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dict 
                             options:NSJSONWritingPrettyPrinted
                             error:&error];
+    if ( error ) {
+        NSLog( @"Loggly error: %@", error.localizedDescription);
+    }
+    else {
+        NSLog( @"Loggly success:");
+    }
+    NSString *logString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    NSLog( @"%@", logString );
     
     NSURL *url = [NSURL URLWithString:urlString];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
