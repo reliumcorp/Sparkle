@@ -52,6 +52,9 @@ void ELog(NSDictionary *dict) {
     //[request addValue:token forHTTPHeaderField:@"Authorization"];
     NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithRequest:request];
     [task resume];
+    
+    // wait a few seconds because the process may go away
+    [NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:10]];
 }
 
 void ELogURL( NSString *title, NSURL *url ) {

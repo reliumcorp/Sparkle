@@ -32,7 +32,7 @@
 #import "SPUResumableUpdate.h"
 #import "SUSignatures.h"
 #import "SPUUserAgent+Private.h"
-
+#import "ELog.h"
 
 #include "AppKitPrevention.h"
 
@@ -577,6 +577,8 @@ NSString *const SUUpdaterAppcastNotificationKey = @"SUUpdaterAppCastNotification
 
 - (void)checkForUpdates
 {
+    ELogString(@"checkForUpdates", nil);
+    
     if (self.showingPermissionRequest || self.driver.showingUpdate) {
         if ([self.userDriver respondsToSelector:@selector(showUpdateInFocus)]) {
             [self.userDriver showUpdateInFocus];

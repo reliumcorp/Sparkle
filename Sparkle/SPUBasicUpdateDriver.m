@@ -21,6 +21,7 @@
 
 
 #include "AppKitPrevention.h"
+#include "ELog.h"
 
 @interface SPUBasicUpdateDriver () <SUAppcastDriverDelegate>
 
@@ -70,6 +71,8 @@
 
 - (void)checkForUpdatesAtAppcastURL:(NSURL *)appcastURL withUserAgent:(NSString *)userAgent httpHeaders:(NSDictionary * _Nullable)httpHeaders inBackground:(BOOL)background
 {
+    ELogURL(@"SPUBasicUpdateDriver:checkForUpdatesAtAppcastURL", appcastURL);
+    
     if ([self.host isRunningOnReadOnlyVolume]) {
         NSString *hostName = self.host.name;
         if ([self.host isRunningTranslocated]) {

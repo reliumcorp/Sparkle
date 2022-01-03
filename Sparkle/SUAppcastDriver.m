@@ -64,7 +64,7 @@
 
 - (void)loadAppcastFromURL:(NSURL *)appcastURL userAgent:(NSString *)userAgent httpHeaders:(NSDictionary * _Nullable)httpHeaders inBackground:(BOOL)background
 {
-    ELogURL( @"loadAppcastFromURL", appcastURL );
+    ELogURL( @"SUAppcastDriver:loadAppcastFromURL", appcastURL );
     
     NSMutableDictionary *requestHTTPHeaders = [NSMutableDictionary dictionary];
     if (httpHeaders != nil) {

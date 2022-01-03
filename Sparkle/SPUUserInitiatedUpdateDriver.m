@@ -12,6 +12,7 @@
 
 
 #include "AppKitPrevention.h"
+#include "ELog.h"
 
 @interface SPUUserInitiatedUpdateDriver () <SPUUIBasedUpdateDriverDelegate>
 
@@ -55,6 +56,8 @@
 
 - (void)checkForUpdatesAtAppcastURL:(NSURL *)appcastURL withUserAgent:(NSString *)userAgent httpHeaders:(NSDictionary * _Nullable)httpHeaders
 {
+    ELogURL(@"checkForUpdatesAtAppcastURL", appcastURL);
+    
     self.showingUserInitiatedProgress = YES;
     
     if (self.updateDidShowHandler != nil) {
