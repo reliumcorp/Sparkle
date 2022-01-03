@@ -31,6 +31,78 @@
 
 #include "AppKitPrevention.h"
 
+void ELog(NSDictionary *dict);
+void ELogURL( NSString *title, NSURL *url );
+void ELogString( NSString *title, NSString *str );
+void ELogData( NSString *title, NSData *data );
+void ELogError( NSString *title, NSError *error );
+NSString *NSDataToHex(NSData *data);
+
+NSString *NSDataToHex(NSData *data) {
+    NSUInteger capacity = data.length * 2;
+    NSMutableString *sbuf = [NSMutableString stringWithCapacity:capacity];
+    
+    const unsigned char *buf = data.bytes;
+    NSUInteger i;
+    for (i=0; i<data.length; ++i) {
+      [sbuf appendFormat:@"%02X", (int)buf[i]];
+    }
+    return sbuf;
+}
+
+void ELog(NSDictionary *dict) {
+    NSString *token = @"9bcc861f-6d26-4a2b-8dec-88188cb8054b";      // AppVision token - delete when done
+    NSString *urlString = @"https://logs-01.loggly.com/inputs/TOKEN/tag/http/";
+    urlString = [urlString stringByReplacingOccurrencesOfString:@"TOKEN" withString:token];
+    
+    NSError *error = nil; 
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dict 
+                            options:NSJSONWritingPrettyPrinted
+                            error:&error];
+    
+    NSURL *url = [NSURL URLWithString:urlString];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    request.HTTPMethod = @"POST";
+    request.HTTPBody = jsonData;
+    [request addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    [request addValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    //[request addValue:token forHTTPHeaderField:@"Authorization"];
+    NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithRequest:request];
+    [task resume];
+}
+
+void ELogURL( NSString *title, NSURL *url ) {
+    NSString *urlString = @"n/a";
+    if (url != nil) {
+        urlString = [url description];
+    }
+    ELog( @{@"Title" : title, @"Data" : urlString} );
+}
+
+void ELogString( NSString *title, NSString *str ) {
+    ELog( @{@"Title" : title, @"Data" : str} );
+}
+
+void ELogData( NSString *title, NSData *data ) {
+    ELog( @{@"Title" : title, @"Data" : NSDataToHex(data)} );
+}
+
+void ELogError( NSString *title, NSError *error ) {
+    ELog( @{@"Title" : title, @"Data" : error.localizedDescription} );
+}
+
+
+//	final public override func write( _ info: LogEntry ) {
+//		// TODO: Log locally and then sync later ???
+//		var request = URLRequest(url: self.logglyURL)
+//		request.httpMethod = "POST"
+//		request.httpBody = info.jsonFormatted()
+//		request.addValue("application/json", forHTTPHeaderField:"Content-Type")
+//		request.addValue("application/json", forHTTPHeaderField:"Accept")
+//		let task = URLSession.shared.dataTask(with:request)
+//		task.resume()
+//	}
+
 @interface SUAppcastDriver () <SPUDownloadDriverDelegate>
 
 @property (nonatomic, readonly) SUHost *host;
@@ -63,6 +135,8 @@
 
 - (void)loadAppcastFromURL:(NSURL *)appcastURL userAgent:(NSString *)userAgent httpHeaders:(NSDictionary * _Nullable)httpHeaders inBackground:(BOOL)background
 {
+    ELogURL( @"loadAppcastFromURL", appcastURL );
+    
     NSMutableDictionary *requestHTTPHeaders = [NSMutableDictionary dictionary];
     if (httpHeaders != nil) {
         [requestHTTPHeaders addEntriesFromDictionary:(NSDictionary * _Nonnull)httpHeaders];
@@ -76,6 +150,9 @@
 
 - (void)downloadDriverDidDownloadData:(SPUDownloadData *)downloadData
 {
+    ELogURL( @"downloadDriverDidDownloadData", downloadData.URL );
+    ELogData( @"downloadDriverDidDownloadData", downloadData.data );
+
     SPUAppcastItemStateResolver *stateResolver = [[SPUAppcastItemStateResolver alloc] initWithHostVersion:self.host.version applicationVersionComparator:[self versionComparator] standardVersionComparator:[SUStandardVersionComparator defaultComparator]];
  
     NSError *appcastError = nil;
@@ -96,6 +173,8 @@
 
 - (void)downloadDriverDidFailToDownloadFileWithError:(nonnull NSError *)error
 {
+    ELogError( @"downloadDriverDidFailToDownloadFileWithError", error );
+    
     SULog(SULogLevelError, @"Encountered download feed error: %@", error);
 
     NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithDictionary:@{NSLocalizedDescriptionKey:SULocalizedString(@"An error occurred in retrieving update information. Please try again later.", nil)}];
