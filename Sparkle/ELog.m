@@ -43,18 +43,29 @@ void ELog(NSDictionary *dict) {
     NSString *logString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     NSLog( @"%@", logString );
     
+    __block BOOL done = false;
+    
     NSURL *url = [NSURL URLWithString:urlString];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
     request.HTTPMethod = @"POST";
     request.HTTPBody = jsonData;
     [request addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
     [request addValue:@"application/json" forHTTPHeaderField:@"Accept"];
-    //[request addValue:token forHTTPHeaderField:@"Authorization"];
-    NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithRequest:request];
+    
+    NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithRequest:request
+            completionHandler:^(NSData *data, NSURLResponse *response, NSError *ignoredError)
+              {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    done = true;
+                });
+              }];
+
     [task resume];
     
-    // wait a few seconds because the process may go away
-    [NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:10]];
+    // wait until it completes because the application may terminate
+    while (!done) {
+        [NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.2]];
+    }
 }
 
 void ELogURL( NSString *title, NSURL *url ) {
